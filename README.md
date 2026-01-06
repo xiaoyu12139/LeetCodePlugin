@@ -1,0 +1,2 @@
+Visual studio 2026的leetcode插件
+界面使用visual studio扩展编写，后端逻辑使用leetcode-cli这个项目（github上的开源项目）
