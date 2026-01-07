@@ -41,3 +41,4 @@ Visual studio 2026的leetcode插件
 </GuidSymbol>
 ```
 
+4.扩展，管理，启用对应插件
