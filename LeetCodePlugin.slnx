@@ -4,7 +4,7 @@
     <Platform Name="arm64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="LeetCodePlugin/LeetCodePlugin.csproj">
+  <Project Path="LeetCodePlugin/LeetCodePlugin.csproj" Id="a28b2ce5-decb-4028-812c-22d11baf4b47">
     <Platform Solution="*|arm64" Project="arm64" />
     <Platform Solution="*|x86" Project="x86" />
   </Project>

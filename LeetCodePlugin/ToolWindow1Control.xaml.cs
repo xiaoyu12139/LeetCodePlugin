@@ -1,6 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Windows;
 using System.Windows.Controls;
+using System.Diagnostics;
 
 namespace LeetCodePlugin
 {
@@ -23,6 +25,30 @@ namespace LeetCodePlugin
             this.cookieWindow = cookieWindow;
         }
 
+        private string execLCCommand(string command)
+        {
+            // 创建 Process 实例
+            Process process = new Process();
+
+            // 配置启动信息
+            process.StartInfo.FileName = "leetcode";
+            process.StartInfo.Arguments = command; // /C 表示执行完命令后关闭 cmd
+            process.StartInfo.RedirectStandardOutput = true;  // 重定向标准输出
+            process.StartInfo.UseShellExecute = false;  // 不使用操作系统的 shell 启动
+            process.StartInfo.CreateNoWindow = true;    // 不显示命令行窗口
+
+            // 启动进程
+            process.Start();
+
+            // 读取并输出命令行执行结果
+            string output = process.StandardOutput.ReadToEnd();
+            Console.WriteLine(output);
+
+            // 等待进程执行完毕
+            process.WaitForExit();
+            return output;
+        }
+
         /// <summary>
         /// Handles click on the button by displaying a message box.
         /// </summary>
@@ -38,9 +64,10 @@ namespace LeetCodePlugin
 
         private void EditBtnClick(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show(
-                string.Format(System.Globalization.CultureInfo.CurrentUICulture, "Invoked '{0}'", this.ToString()),
-                "EditBtnClick");
+            int num = 0;
+            string command = "edit" + num;
+            execLCCommand(command);
+            problemContent.Text = "1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n1234\n";
         }
 
         private void PreviousBtnClick(object sender, RoutedEventArgs e)
