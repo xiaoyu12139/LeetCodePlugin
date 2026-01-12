@@ -92,6 +92,7 @@
     <VSCTCompile Include="LeetCodePluginPackage.vsct">
       <ResourceName>Menus.ctmenu</ResourceName>
     </VSCTCompile>
+    <EmbeddedResource Include="Resources\leetcode.toml" />
     <Content Include="Resources\ToolWindow1Command.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

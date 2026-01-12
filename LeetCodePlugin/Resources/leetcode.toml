@@ -1,0 +1,6 @@
+[# Default LeetCode CLI configuration]
+[leetcode]
+cookie = ""
+endpoint = "leetcode-cn.com"
+language = "cpp"
+workspace = ""

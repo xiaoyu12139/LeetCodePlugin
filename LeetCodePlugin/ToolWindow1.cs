@@ -1,10 +1,15 @@
-﻿using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell;
 using System;
+using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace LeetCodePlugin
 {
+    
+
     /// <summary>
     /// This class implements the tool window exposed by this package and hosts a user control.
     /// </summary>
@@ -47,5 +52,7 @@ namespace LeetCodePlugin
             ToolWindow1Control toolWindow = (ToolWindow1Control)this.Content;
             toolWindow.setCookieWindow(window);
         }
+
+        
     }
 }

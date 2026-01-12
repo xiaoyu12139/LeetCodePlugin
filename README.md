@@ -1,7 +1,7 @@
 Visual studio 2026的leetcode插件
 界面使用visual studio扩展编写，后端逻辑使用leetcode-cli这个项目（github上的开源项目）
 
-修改菜单位置不生效：
+##### 修改菜单位置不生效：
 
 ```
 1.vs中powershell中执行devenv /rootsuffix Exp /log，打开实验vs环境，删除之前的所有的插件
@@ -42,3 +42,15 @@ Visual studio 2026的leetcode插件
 ```
 
 4.扩展，管理，启用对应插件
+
+##### 安装leetcode-cli
+
+参考项目：https://github.com/clearloop/leetcode-cli 中的readme文档
+
+安装过程需要使用到openssl库，sqlite3库，使用vcpkg进行安装：
+
+```
+openssl:x64-windows
+sqlite3:x64-windows
+```
+
