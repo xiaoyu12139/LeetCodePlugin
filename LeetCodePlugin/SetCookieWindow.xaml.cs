@@ -22,10 +22,15 @@ namespace LeetCodePlugin
     {
 
         Window _parentWindow;
+
+        public string csrftoken { get; set; } = "123";
+        public string LEETCODE_SESSION { get; set; } = "123";
         public SetCookieWindow()
         {
             InitializeComponent();
-            
+            DataContext = this;
+            csrftoken = LeetcodeTomlUtil.Instance.csrftoken;
+            LEETCODE_SESSION = LeetcodeTomlUtil.Instance.LEETCODE_SESSION;
         }
         public void setParentWindow(Window window)
         {
@@ -35,6 +40,9 @@ namespace LeetCodePlugin
         private void OkBtnClick(object sender, RoutedEventArgs e)
         {
             _parentWindow.Close();
+            LeetcodeTomlUtil.Instance.modifyCsrftokenValue(csrftoken);
+            LeetcodeTomlUtil.Instance.modifyLEETCODE_SESSIONValue(csrftoken);
+            LeetcodeTomlUtil.Instance.saveAllValue();
         }
 
         private void CancelBtnClick(object sender, RoutedEventArgs e)

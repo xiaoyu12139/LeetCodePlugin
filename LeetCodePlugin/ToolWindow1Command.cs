@@ -198,6 +198,8 @@ namespace LeetCodePlugin
             {
                 return;
             }
+            var control = (ToolWindow1Control)window.Content;
+            control.SetPackage(package);
             IVsWindowFrame windowFrame = (IVsWindowFrame)window.Frame;
             Microsoft.VisualStudio.ErrorHandler.ThrowOnFailure(windowFrame.Show());
         }
