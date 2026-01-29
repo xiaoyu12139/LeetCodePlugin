@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using Tomlyn;
 using Tomlyn.Model;
 using System.IO;
+using System.Security.RightsManagement;
 
 namespace LeetCodePlugin
 {
@@ -13,6 +14,8 @@ namespace LeetCodePlugin
     {
         public  string csrftoken;
         public  string LEETCODE_SESSION;
+        public string last_edit_num;
+        public string last_lang;
 
          TomlTable doc;
 
@@ -31,6 +34,9 @@ namespace LeetCodePlugin
             // 读取值
             csrftoken = (string)cookies["csrf"];
             LEETCODE_SESSION = (string)cookies["session"];
+            var code = (TomlTable)doc["code"];
+            last_lang = (string)code["lang"];
+            last_edit_num = (string)code["edit_num"];
         }
 
         ~LeetcodeTomlUtil()

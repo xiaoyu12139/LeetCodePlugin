@@ -48,11 +48,23 @@ namespace LeetCodePlugin
 
             SetCookieWindow cookieWin = (SetCookieWindow)window.Content;
             cookieWin.setParentWindow(window);
+            window.Closing += (s, e) =>
+            {
+                e.Cancel = true;  // 阻止销毁
+                window.Hide();      // 改为隐藏
+            };
 
             ToolWindow1Control toolWindow = (ToolWindow1Control)this.Content;
             toolWindow.setCookieWindow(window);
         }
 
-        
+        protected override void Initialize()
+        {
+            base.Initialize();
+            var control = (ToolWindow1Control)this.Content;
+            control.SetPackage((AsyncPackage)this.Package);     // 始终为“当前显示的控件实例”注入
+                                                                // 或者：control.SetServiceProvider(this.Package);   // 接口类型建议用 IAsyncServiceProvider
+        }
+
     }
 }

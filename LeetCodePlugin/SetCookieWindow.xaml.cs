@@ -39,7 +39,7 @@ namespace LeetCodePlugin
 
         private void OkBtnClick(object sender, RoutedEventArgs e)
         {
-            _parentWindow.Close();
+            _parentWindow.Hide();
             LeetcodeTomlUtil.Instance.modifyCsrftokenValue(csrftoken);
             LeetcodeTomlUtil.Instance.modifyLEETCODE_SESSIONValue(csrftoken);
             LeetcodeTomlUtil.Instance.saveAllValue();
@@ -47,7 +47,7 @@ namespace LeetCodePlugin
 
         private void CancelBtnClick(object sender, RoutedEventArgs e)
         {
-            _parentWindow.Close();
+            _parentWindow.Hide();
         }
     }
 }

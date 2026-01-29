@@ -2,15 +2,19 @@
 using EnvDTE80;
 using Microsoft.VisualStudio.Shell;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Packaging;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Shapes;
+using static System.Net.Mime.MediaTypeNames;
+
 // 如果也需要 EnvDTE.Window，可按需：
 using DteWindow = EnvDTE.Window;
 using IOPath = System.IO.Path;
@@ -21,6 +25,44 @@ namespace LeetCodePlugin
 {
     public static class VsFileOps
     {
+
+        public static IEnumerable<string> FindFilesByName(string root, string nameOrPattern)
+        {
+            // 支持通配符："*.rc"、"app.config"、"*.toml"
+            if (nameOrPattern.IndexOfAny(new[] { '*', '?' }) >= 0)
+                return Directory.EnumerateFiles(root, nameOrPattern, SearchOption.AllDirectories);
+
+            // 精确名称（不区分大小写）
+            return Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                            .Where(p => string.Equals(IOPath.GetFileName(p), nameOrPattern,
+                                                      StringComparison.OrdinalIgnoreCase));
+        }
+
+        public static async Task<string> GetCurrentEditFilePathAsync(IAsyncServiceProvider provider, string nameOrPattern)
+        {
+            await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
+
+            var dte = (DTE2)await provider.GetServiceAsync(typeof(DTE));
+            var proj = GetActiveProject(dte);
+            if (proj == null) return null;
+
+            var root = GetProjectRoot(proj);
+            string result = null;
+
+            // 先走文件系统遍历（快，覆盖所有磁盘文件）
+            if (!string.IsNullOrEmpty(root) && Directory.Exists(root))
+            {
+                foreach (var p in FindFilesByName(root, nameOrPattern))
+                {
+                    result = p;
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+
         public static async Task CreateFileInActiveProjectAsync(AsyncPackage pkg, string relativePath, string content)
         {
             await ThreadHelper.JoinableTaskFactory.SwitchToMainThreadAsync();
@@ -132,6 +174,20 @@ namespace LeetCodePlugin
         public ToolWindow1Control()
         {
             this.InitializeComponent();
+            Loaded += (s, e) => editNum.TextChanged += editNumTextChanged;
+            editNum.Text = LeetcodeTomlUtil.Instance.last_edit_num;
+            //var item = langCombobox.Items.Cast<object>().FirstOrDefault(o => (o as Language)?.Name == LeetcodeTomlUtil.Instance.last_lang);
+            //langCombobox.SelectedItem = item;
+            //langCombobox.SelectedValue = LeetcodeTomlUtil.Instance.last_lang;
+            langCombobox.Loaded += (s, e) =>
+            {
+                var src = langCombobox.ItemsSource as IEnumerable<Language>;
+                var item = src?.FirstOrDefault(l =>
+                    string.Equals(l.Name, LeetcodeTomlUtil.Instance.last_lang, StringComparison.OrdinalIgnoreCase));
+                if (item != null) langCombobox.SelectedItem = item;
+            };
+            string output = execLCCommand("pick " + editNum.Text);
+            problemContent.Text = output;
         }
 
         public void setCookieWindow(WpfWindow cookieWindow)
@@ -150,6 +206,7 @@ namespace LeetCodePlugin
             process.StartInfo.RedirectStandardOutput = true;  // 重定向标准输出
             process.StartInfo.UseShellExecute = false;  // 不使用操作系统的 shell 启动
             process.StartInfo.CreateNoWindow = true;    // 不显示命令行窗口
+            process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
 
             // 启动进程
             process.Start();
@@ -186,7 +243,7 @@ namespace LeetCodePlugin
             string command = "edit " + st;
             execLCCommand(command);
             string output = execLCCommand("pick " + st);
-            problemContent.Text = output; 
+            problemContent.Text = output;
             string targetFileName = "";
             string targetFileContent = "";
             string userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -211,7 +268,8 @@ namespace LeetCodePlugin
             }
             if (targetFileName == "" || targetFileContent == "")
                 return;
-            await VsFileOps.CreateFileInActiveProjectAsync(_package, @"Resources\"+ targetFileName, targetFileContent);
+            await VsFileOps.CreateFileInActiveProjectAsync(_package, @"Resources\" + targetFileName, targetFileContent);
+            Tabs.SelectedIndex = 0;
         }
 
         private void PreviousBtnClick(object sender, RoutedEventArgs e)
@@ -230,5 +288,66 @@ namespace LeetCodePlugin
             editNum.Text = (int.Parse(editNum.Text) + 1).ToString();
         }
 
+        private void editNumTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!IsLoaded || problemContent == null) return;
+            var tb = (TextBox)sender;
+            string text = tb.Text;
+            // 处理逻辑
+            string output = execLCCommand("pick " + text);
+            problemContent.Text = output;
+            Tabs.SelectedIndex = 0;
+        }
+
+        private async void testBtnClick(object sender, RoutedEventArgs e)
+        {
+            var st = editNum.Text;           // 文本（可编辑下拉框时）
+            var ed = langCombobox.Text;
+            var pattern = st + "*." + ed; // 或来自文本框
+            string path = await VsFileOps.GetCurrentEditFilePathAsync(_package, pattern);
+            bool exists = File.Exists(path);
+            if (exists)
+            {
+                var name = IOPath.GetFileName(path);
+                string userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string dotleetcodeDir = IOPath.Combine(userDir, ".leetcode");
+                string codeDir = IOPath.Combine(dotleetcodeDir, "code");
+                string lcFile = IOPath.Combine(codeDir, name);
+                File.WriteAllText(lcFile, File.ReadAllText(path, Encoding.UTF8), Encoding.UTF8);
+            }
+            string text = editNum.Text;
+            // 处理逻辑
+            string output = execLCCommand("test " + text);
+            resultContent.Text = output;
+            Tabs.SelectedIndex = 1;
+        }
+
+        private async void submitBtnClick(object sender, RoutedEventArgs e)
+        {
+            var st = editNum.Text;           // 文本（可编辑下拉框时）
+            var ed = langCombobox.Text;
+            var pattern = st + "*." + ed; // 或来自文本框
+            string path = await VsFileOps.GetCurrentEditFilePathAsync(_package, pattern);
+            bool exists = File.Exists(path);
+            if (exists)
+            {
+                var name = IOPath.GetFileName(path);
+                string userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                string dotleetcodeDir = IOPath.Combine(userDir, ".leetcode");
+                string codeDir = IOPath.Combine(dotleetcodeDir, "code");
+                string lcFile = IOPath.Combine(codeDir, name);
+                File.WriteAllText(lcFile, File.ReadAllText(path, Encoding.UTF8), Encoding.UTF8);
+            }
+            string text = editNum.Text;
+            // 处理逻辑
+            string output = execLCCommand("exec " + text);
+            resultContent.Text = output;
+            Tabs.SelectedIndex = 1;
+        }
+
+        private void langComboboxSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
     }
 }
