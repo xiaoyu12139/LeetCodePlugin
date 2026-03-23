@@ -41,7 +41,7 @@ namespace LeetCodePlugin
         {
             _parentWindow.Hide();
             LeetcodeTomlUtil.Instance.modifyCsrftokenValue(csrftoken);
-            LeetcodeTomlUtil.Instance.modifyLEETCODE_SESSIONValue(csrftoken);
+            LeetcodeTomlUtil.Instance.modifyLEETCODE_SESSIONValue(LEETCODE_SESSION);
             LeetcodeTomlUtil.Instance.saveAllValue();
         }
 
